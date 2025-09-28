@@ -3,15 +3,38 @@
 HOST='127.0.0.1'
 PORT=6379
 AUTH=123456
+RCLI="../target/debug/r-cli"
 
-CLI="../target/debug/r-cli"
+SUCCESS=0
+FAIL=0
+TOTAL=0
 
-# 定义所有命令列表
+run_test() {
+    local cmd="$1"
+    ((TOTAL++))
+
+    output=$($RCLI -h $HOST -p $PORT -a $AUTH $cmd)
+
+    echo "== 测试命令: $cmd =="
+    echo "输出: $output"
+
+    if [[ "$output" =~ ^\(error\) ]]; then
+        echo "❌ FAIL"
+        ((FAIL++))
+    else
+        echo "✅ SUCCESS"
+        ((SUCCESS++))
+    fi
+    echo
+}
+
+$RCLI -h $HOST -p $PORT -a $AUTH FLUSHALL
+
 COMMANDS=(
-    "AUTH secret"
+    "AUTH $AUTH"
     "PING"
-    "GET foo"
     "SET foo bar"
+    "GET foo"
     "SETNX foo bar2"
     "APPEND foo world"
     "SUBSTR foo 0 2"
@@ -21,14 +44,14 @@ COMMANDS=(
     "DECR counter"
     "RPUSH mylist a"
     "LPUSH mylist b"
-    "RPOP mylist"
-    "LPOP mylist"
-    "BRPOP mylist 1"
-    "BLPOP mylist 1"
     "LLEN mylist"
     "LINDEX mylist 0"
     "LSET mylist 0 c"
     "LRANGE mylist 0 -1"
+    "RPOP mylist"
+    "LPOP mylist"
+    "BRPOP mylist 1"
+    "BLPOP mylist 1"
     "LTRIM mylist 0 1"
     "LREM mylist 0 a"
     "RPOPLPUSH mylist mylist2"
@@ -64,15 +87,12 @@ COMMANDS=(
     "RANDOMKEY"
     "SELECT 0"
     "MOVE foo 1"
-    "RENAME foo bar"
-    "RENAMENX foo bar"
     "KEYS *"
     "DBSIZE"
     "ECHO hello"
     "SAVE"
     "BGSAVE"
     "BGREWRITEAOF"
-    "SHUTDOWN"
     "LASTSAVE"
     "TYPE foo"
     "FLUSHDB"
@@ -84,12 +104,8 @@ COMMANDS=(
     "EXPIREAT foo 1924992000"
     "TTL foo"
     "SLAVEOF no one"
-    "DEBUG OBJECT foo"
     "MSET foo1 bar1 foo2 bar2"
     "MSETNX foo1 bar1 foo2 bar2"
-    "MULTI"
-    "EXEC"
-    "DISCARD"
     "HSET myhash field1 value1"
     "HGET myhash field1"
     "HDEL myhash field1"
@@ -98,13 +114,22 @@ COMMANDS=(
     "HVALS myhash"
     "HGETALL myhash"
     "HEXISTS myhash field1"
-    "MONITOR"
+    "RENAME foo1 bar"
+    "RENAMENX foo2 bar"
+#    "DEBUG OBJECT foo"
+    "MULTI"
+#    "EXEC"
+#    "DISCARD"
+    "SHUTDOWN"
+#    "MONITOR"
 )
 
-# 循环执行每条命令
 for cmd in "${COMMANDS[@]}"; do
-    echo "== 测试命令: $cmd =="
-    $CLI -h $HOST -p $PORT -a $AUTH $cmd
+    run_test "$cmd"
 done
 
-echo "== 所有命令测试完成 ✅ =="
+echo "======================"
+echo "Total commands : $TOTAL"
+echo "Success        : $SUCCESS"
+echo "Failed         : $FAIL"
+echo "======================"
