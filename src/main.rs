@@ -1,5 +1,4 @@
 use std::env;
-use std::net::{ToSocketAddrs};
 use crate::anet::{tcp_connect};
 use crate::redis_cli::{cli_send_command, init, repl, Config};
 
@@ -27,3 +26,5 @@ fn main() {
     // 5. 非交互式执行命令
     cli_send_command(args[parsed..].iter().map(|s| s.as_str()).collect(), &config, &mut stream, false);
 }
+
+
