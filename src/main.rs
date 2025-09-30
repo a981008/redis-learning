@@ -4,6 +4,8 @@ use crate::redis_cli::{cli_send_command, init, repl, Config};
 
 mod redis_cli;
 mod anet;
+mod adlist;
+mod zipmap;
 
 fn main() {
     // 1. 收集命令行参数
